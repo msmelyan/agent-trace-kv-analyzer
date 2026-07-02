@@ -23,7 +23,7 @@ dashboard:                  ## build dashboard.html + headline SVG from the *.st
 	$(PY) build_dashboard.py
 	$(PY) build_headline_svg.py
 	@echo ""
-	@echo "→ To refresh the LIVE dashboard, ask Claude to re-publish dashboard.html to:"
+	@echo "→ To refresh the hosted dashboard snapshot, ask Claude to re-publish dashboard.html to:"
 	@echo "  $(ARTIFACT_URL)  (redeploys in place — URL unchanged)"
 
 all: download analyze dashboard   ## full pipeline, end to end
