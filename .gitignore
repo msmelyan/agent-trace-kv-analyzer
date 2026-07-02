@@ -1,0 +1,17 @@
+# Python env
+.venv/
+__pycache__/
+*.pyc
+
+# Downloaded raw datasets (~7 GB) — recreate with `python download_datasets.py`
+agentic_traces/**/*.parquet
+agentic_traces/**/*.jsonl
+agentic_traces/**/*.zip
+agentic_traces/**/ShareGPT_V3_unfiltered_cleaned_split.json
+agentic_traces/**/.cache/
+agentic_traces/**/download.log
+
+# Generated dashboard (rebuild with `python build_dashboard.py`)
+dashboard.html
+
+# The per-dataset reports (*.md) and *.stats.json ARE committed as example outputs.

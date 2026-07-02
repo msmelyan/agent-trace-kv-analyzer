@@ -1,0 +1,291 @@
+<title>Coding-Agent Traces — Prefix-Cache & KV Dashboard</title>
+<style>
+  :root{
+    --ground:#0f1417; --panel:#151d21; --panel2:#1b252a;
+    --ink:#e8eef0; --muted:#95a7ac; --faint:#6b7d82; --line:#26333a; --line2:#324249;
+    --isl:#e0913a;  --osl:#3fb6ab;           /* input warm / output cool */
+    --good:#4bb377; --mid:#d9a441; --bad:#d8664a;   /* semantic cache-hit */
+    --accent:#5cc4bb; --dsv3:#9b8cf0;               /* GLM-5.2 / DeepSeek-V3 */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:52px 26px 90px}
+  code,.mono,.num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .num{font-variant-numeric:tabular-nums}
+  a{color:var(--accent)}
+
+  .eyebrow{font-family:ui-monospace,monospace;font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+  h1{font-size:clamp(26px,3.6vw,40px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em;
+    font-weight:650;text-wrap:balance}
+  .lede{font-size:17px;color:var(--muted);max-width:70ch;margin:0}
+  .meta{font-family:ui-monospace,monospace;font-size:12.5px;color:var(--faint);margin-top:14px}
+
+  h2{font-size:12.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+    font-family:ui-monospace,monospace;font-weight:600;margin:52px 0 4px;
+    padding-bottom:10px;border-bottom:1px solid var(--line2)}
+  .say{color:var(--muted);font-size:14.5px;max-width:74ch;margin:14px 0 20px}
+  .say b{color:var(--ink)}
+
+  /* chart rows */
+  .chart{display:flex;flex-direction:column;gap:9px;margin:6px 0 4px}
+  .row{display:grid;grid-template-columns:190px 1fr;align-items:center;gap:14px}
+  .row .lab{font-size:13px;color:var(--muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .lab b{color:var(--ink);font-weight:600}
+  .barwrap{display:flex;align-items:center;gap:9px}
+  .track{background:var(--panel2);border-radius:5px;height:22px;flex:1;overflow:hidden;position:relative}
+  .fill{display:block;height:100%;border-radius:5px;min-width:2px}
+  .val{font-family:ui-monospace,monospace;font-size:12.5px;color:var(--ink);
+    font-variant-numeric:tabular-nums;min-width:74px}
+  @media(max-width:640px){.row{grid-template-columns:120px 1fr}}
+
+  /* dual bar (ISL/OSL) */
+  .legend{display:flex;gap:18px;font-size:12.5px;color:var(--muted);margin:2px 0 16px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* table */
+  .scroll{overflow-x:auto;margin:4px 0}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-family:ui-monospace,monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.04em;color:var(--faint);font-weight:600}
+  td.num{font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--panel)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-family:ui-monospace,monospace;
+    font-size:11.5px;font-weight:600}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:15px 16px}
+  .card .big{font-size:23px;font-weight:650;letter-spacing:-.01em}
+  .card .k{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:8px;padding:13px 16px;font-size:13.5px;color:var(--muted);margin:18px 0}
+  .note b{color:var(--ink)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  ul.find{margin:12px 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:13px}
+  ul.find li{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 16px;font-size:14px;color:var(--muted)}
+  ul.find li b{color:var(--ink)}
+  footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:12.5px;color:var(--faint)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Coding-agent traces + chat baseline · prefix-cache & KV modeling</p>
+  <h1>Six agent traces + a chat baseline, one serving-cost lens</h1>
+  <p class="lede">~19.8k sessions across five agent harnesses, a verifier, and a ShareGPT chat baseline — profiled for
+     request shape, prefix-cache reuse, and KV-cache footprint. The question: how much of an agentic prompt is a
+     cache hit, how big does the KV cache get, and how different is it from chat?</p>
+  <p class="meta">Tokens measured for AxT · tiktoken o200k_base elsewhere · KV priced on GLM-5.2 (~88) & DeepSeek-V3 (~69 KiB/tok), both MLA · heavy sets sampled</p>
+
+  <div class="cards">
+    <div class="card"><div class="big">7</div><div class="k">datasets (6 agent + chat)</div></div>
+    <div class="card"><div class="big">~19.8k</div><div class="k">sessions analyzed</div></div>
+    <div class="card"><div class="big">~314k</div><div class="k">LLM calls (steps)</div></div>
+    <div class="card"><div class="big" style="color:var(--good)">93–97%</div><div class="k">cache hit (append-only)</div></div>
+    <div class="card"><div class="big" style="color:var(--bad)">36%</div><div class="k">cache hit (state machine)</div></div>
+  </div>
+
+  <!-- WHAT EACH TRACE IS -->
+  <h2>The seven datasets — what each trace is</h2>
+  <p class="say">Six are public <b>coding-agent traces</b> (agents resolving real GitHub issues), downloaded from Hugging
+     Face; the last is a <b>ShareGPT chat baseline</b> (no tools). They differ mainly in <b>harness architecture</b>,
+     which turns out to drive everything downstream.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>dataset</th><th>HF repo</th><th>harness / arch</th><th>what it is</th><th>format · tokens</th></tr></thead>
+    <tbody id="t_desc"></tbody>
+  </table></div>
+
+  <!-- HEADLINE: cache hit -->
+  <h2>Prefix-cache hit ratio — the headline</h2>
+  <p class="say"><code>1 − Σ nISL / Σ ISL</code>: the share of input tokens already in cache (cISL) and free to skip.
+     <b>Append-only ReAct/CodeAct agents cluster at 93–97%</b> — nearly all input is reused prefix. <b>Moatless</b>,
+     a state machine that rebuilds its prompt per phase, collapses to <b>36%</b>. The <b>verifier</b> is a single
+     call, so nothing to reuse.</p>
+  <div class="chart" id="c_hit"></div>
+
+  <!-- ISL vs OSL -->
+  <h2>ISL ≫ OSL — the agentic signature</h2>
+  <p class="say">Per-call input vs output at the median (log scale). For agents input is <b>50–200× larger than
+     output</b> — <b>prefill-heavy / decode-light</b>. The <b>ShareGPT chat baseline</b> (bottom) is only ~2.4×:
+     balanced. Same prefix-cache mechanism, opposite request shape.</p>
+  <div class="legend">
+    <span class="chip"><span class="sw" style="background:var(--isl)"></span> ISL (input / call), p50 tokens</span>
+    <span class="chip"><span class="sw" style="background:var(--osl)"></span> OSL (output / call), p50 tokens</span>
+  </div>
+  <div class="chart" id="c_io"></div>
+
+  <div class="grid2">
+    <div>
+      <h2>KV-cache size — median session <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">· GLM-5.2 vs DeepSeek-V3</span></h2>
+      <p class="say">Peak median context priced on two frontier <b>MLA</b> models. MLA caches a compressed latent, so
+         KV/token = layers·(512 lora + 64 rope)·2B — <b>GLM-5.2 ≈ 88 KiB</b> (78 L), <b>DeepSeek-V3 ≈ 69 KiB</b> (61 L).
+         Both are far below dense-GQA GLM-4.6 (368 KiB). Bars reflect <b>context length alone</b>.</p>
+      <div class="legend">
+        <span class="chip"><span class="sw" style="background:var(--accent)"></span> GLM-5.2 (~88 KiB/tok)</span>
+        <span class="chip"><span class="sw" style="background:var(--dsv3)"></span> DeepSeek-V3 (~69 KiB/tok)</span>
+      </div>
+      <div class="chart" id="c_kv"></div>
+    </div>
+    <div>
+      <h2>Steps per session (p50)</h2>
+      <p class="say">Agentic "rounds" — LLM calls per task. The verifier is one-shot; ReAct agents run 14–23.</p>
+      <div class="chart" id="c_steps"></div>
+    </div>
+  </div>
+
+  <!-- context scaling -->
+  <h2>Context budget scaling — AxT (16K → 131K)</h2>
+  <p class="say">The same agent, four context budgets. Bigger budget → more steps, larger peak context, and higher
+     cache-hit. Concretely shows how <b>short benchmark sessions underestimate
+     cISL</b>.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>context budget</th><th>mean steps</th><th>mean peak-ctx (tok)</th><th>cache-hit</th></tr></thead>
+    <tbody id="t_scale"></tbody>
+  </table></div>
+
+  <!-- KV tail -->
+  <h2>The long-session tail blows up KV memory</h2>
+  <p class="say">Peak context at p50 vs p99 (tokens) and the resulting p99 KV footprint on both MLA models. A small
+     tail of long sessions dominates memory — a few long sessions drive most of the peak KV demand.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>dataset</th><th>peak-ctx p50</th><th>peak-ctx p99</th><th>KV p99 · GLM-5.2</th><th>KV p99 · DeepSeek-V3</th></tr></thead>
+    <tbody id="t_tail"></tbody>
+  </table></div>
+
+  <!-- master table -->
+  <h2>All datasets</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>dataset</th><th>harness / arch</th><th>sessions</th><th>steps p50</th>
+      <th>ISL p50</th><th>OSL p50</th><th>KV p50 · GLM-5.2</th><th>cache-hit</th></tr></thead>
+    <tbody id="t_master"></tbody>
+  </table></div>
+
+  <h2>What it means</h2>
+  <ul class="find">
+    <li><b>Append-only histories are near-perfectly cacheable.</b> Each turn appends a tool result to a growing transcript, so 93–97% of every prompt is a cache hit. AxT: 2.32&nbsp;billion input tokens → only 70M ever need real prefill.</li>
+    <li><b>Architecture, not task, decides cache behavior.</b> Moatless solves the same SWE tasks but rebuilds its prompt per phase → 36% hit, 95% of sessions shrink context. ~2.7× more prefill per cached token.</li>
+    <li><b>Prefill-heavy / decode-light.</b> ISL is 50–200× OSL at the median — the opposite of ShareGPT chat, and the reason prefix caching is the dominant cost lever for agents.</li>
+    <li><b>KV tail is brutal.</b> Peak-context p99 hits 60–100k tokens = 16–25&nbsp;GiB of KV on a 32B model, vs ~4&nbsp;GiB median.</li>
+  </ul>
+
+  <div class="note"><b>How this maps to Frontier (arXiv 2605.21312):</b> Frontier <i>simulates</i> vLLM's block-hash prefix
+     cache and reports ~37% hit on its SharedGPT replay. Our <b>append-only</b> agents (93–97%) sit far above that because
+     agent histories are near-perfectly append-only; <b>Moatless (36%)</b> lands right in Frontier's regime — precisely
+     because it isn't append-only.</div>
+  <div class="note"><b>Caveats:</b> cISL split is append-only arithmetic (exact for ReAct/CodeAct, approximate for Moatless);
+     OSL excludes hidden reasoning (non-reasoning models); no real CPU-core-seconds — only riptide-at-runtime measures cache-% and CPU. Heavy sets sampled.</div>
+
+  <footer>Source data in <code>~/workspace/traces/datasets/</code> · reports in <code>~/workspace/traces/analysis/</code> · generated 2026-07-02</footer>
+</div>
+
+<script>
+const DS = __DS__;        /* injected from *.stats.json by build_dashboard.py */
+const SCALE = __SCALE__;  /* injected: AxT per-context-budget means */
+const DESC = [
+ {k:"axt-swe-agent-lm", repo:"AxT-dev/swe-agent-lm-32b-r2e-gym-trajectories", arch:"SWE-agent-LM-32B · append-only ReAct",
+  what:"SWE-agent-LM-32B run on R2E-Gym executable SWE envs (DeepSWE lineage). Repeated at 4 context budgets ×2 attempts — the reason it's ideal for the cISL-vs-context story.",
+  fmt:"JSONL · <b>measured</b> token_usage + timing"},
+ {k:"nebius", repo:"nebius/SWE-agent-trajectories", arch:"SWE-agent · classic ACI",
+  what:"~80K SWE-agent runs released by Nebius to train open SWE agents. Emits one shell-style command per turn (edit / open / search_dir / python).",
+  fmt:"parquet ×12 · tiktoken (7B KV)"},
+ {k:"openhands", repo:"SWE-Gym/OpenHands-Sampled-Trajectories", arch:"OpenHands · CodeAct",
+  what:"OpenHands rollouts on SWE-Gym (ICML'25). Native OpenAI tool-calling with explicit tool-result messages; can condense long histories.",
+  fmt:"parquet ×3 · tiktoken (+tool args)"},
+ {k:"r2egym-sft", repo:"R2E-Gym/R2EGym-SFT-Trajectories", arch:"ReAct · &lt;function=&gt;",
+  what:"The supervised-fine-tuning set from R2E-Gym (COLM'25): curated successful ReAct trajectories used to teach the tool-use loop.",
+  fmt:"parquet · tiktoken"},
+ {k:"moatless", repo:"SWE-Gym/MoatlessTools-Sampled-Trajectories", arch:"Moatless · state machine",
+  what:"Moatless Tools on SWE-Gym: a structured state machine (Search→Identify→Decide→Plan→Edit) that rebuilds a focused prompt per phase instead of appending. The prefix-cache outlier.",
+  fmt:"zip run-dumps · per-call prompt logs"},
+ {k:"r2egym-verifier", repo:"R2E-Gym/R2EGym-Verifier-Trajectories", arch:"one-shot verifier / judge",
+  what:"Reward-model data: a whole trajectory fed to a judge that emits a single verdict. Not an agent — a one-shot classification workload, included as a contrast.",
+  fmt:"parquet · tiktoken · has rewards"},
+ {k:"sharegpt-v3", repo:"ShareGPT_V3_unfiltered_cleaned_split", arch:"human↔ChatGPT web chat · baseline",
+  what:"~94K real human↔ChatGPT conversations (the source of Frontier's SharedGPT trace). No tools, no environment — a non-agentic chat baseline showing how different chat request-shape is from agents.",
+  fmt:"JSON · tiktoken · Llama-3.1-8B KV"},
+];
+document.getElementById("t_desc").innerHTML = DESC.map(d=>
+    `<tr><td><code>${d.k}</code></td>`+
+    `<td style="text-align:left"><code style="font-size:11px;color:var(--muted);white-space:normal">${d.repo}</code></td>`+
+    `<td style="text-align:left;color:var(--ink);font-size:12px;white-space:normal">${d.arch}</td>`+
+    `<td style="text-align:left;color:var(--muted);font-size:12.5px;white-space:normal;min-width:280px">${d.what}</td>`+
+    `<td style="text-align:left;color:var(--faint);font-size:11.5px;white-space:normal">${d.fmt}</td></tr>`).join("");
+// MLA KV cache (compressed latent): KiB/token = layers*(kv_lora_rank + qk_rope_head_dim)*2B / 1024
+const KV_GLM  = 87.75;   // GLM-5.2:     78*(512+64)*2 = 89,856 B
+const KV_DSV3 = 68.625;  // DeepSeek-V3: 61*(512+64)*2 = 70,272 B
+const kvMiB = (ctxTok, kib) => ctxTok * kib / 1024;
+const kfmt = n => n>=1000 ? (n/1000).toFixed(n>=10000?0:1)+"k" : ""+n;
+const gib  = mib => (mib/1024>=1 ? (mib/1024).toFixed(1)+" GiB" : Math.round(mib)+" MiB");
+const hitColor = h => h>=90?"var(--good)":h>=50?"var(--mid)":"var(--bad)";
+const shortKey = k => k.replace("swegym-","").replace("-swe-agent","").replace("swe-agent-lm-32b","axt-swe-agent-lm");
+const labelOf = d => shortKey(d.key) + (d.baseline ? ' <span style="color:var(--faint);font-weight:400">◇ chat</span>' : '');
+
+function bars(id, rows){
+  const el=document.getElementById(id);
+  const max=Math.max(...rows.map(r=>r.v));
+  el.innerHTML=rows.map(r=>{
+    const w=(r.v/max*100).toFixed(1);
+    return `<div class="row"><span class="lab">${r.lab}</span>`+
+      `<span class="barwrap"><span class="track"><span class="fill" style="width:${w}%;background:${r.c}"></span></span>`+
+      `<span class="val">${r.t}</span></span></div>`;
+  }).join("");
+}
+// cache hit
+bars("c_hit", DS.map(d=>({lab:`<b>${shortKey(d.key)}</b>`+(d.baseline?' <span style="color:var(--faint);font-weight:400">◇ chat</span>':''), v:Math.max(d.hit,0.6), c:hitColor(d.hit), t:d.hit.toFixed(1)+"%"})));
+// KV median
+// KV median — grouped GLM-5.2 vs DeepSeek-V3
+(function(){
+  const el=document.getElementById("c_kv");
+  const max=Math.max(...DS.map(d=>kvMiB(d.ctx50,KV_GLM)));
+  el.innerHTML=DS.map(d=>{
+    const g=kvMiB(d.ctx50,KV_GLM), v=kvMiB(d.ctx50,KV_DSV3);
+    const wg=(g/max*100).toFixed(1), wv=(v/max*100).toFixed(1);
+    return `<div class="row"><span class="lab">${labelOf(d)}</span>`+
+      `<span style="display:flex;flex-direction:column;gap:3px">`+
+      `<span class="barwrap"><span class="track" style="height:15px"><span class="fill" style="width:${wg}%;background:var(--accent)"></span></span><span class="val">${gib(g)}</span></span>`+
+      `<span class="barwrap"><span class="track" style="height:15px"><span class="fill" style="width:${wv}%;background:var(--dsv3)"></span></span><span class="val">${gib(v)}</span></span>`+
+      `</span></div>`;
+  }).join("");
+})();
+// steps
+bars("c_steps", DS.map(d=>({lab:labelOf(d), v:d.steps, c:"var(--osl)", t:d.steps.toString()})));
+
+// ISL/OSL dual (log scale)
+(function(){
+  const el=document.getElementById("c_io");
+  const lg = x => Math.log10(Math.max(x,1));
+  const maxL = Math.max(...DS.map(d=>lg(d.isl)));
+  el.innerHTML = DS.map(d=>{
+    const wi=(lg(d.isl)/maxL*100).toFixed(1), wo=(lg(d.osl)/maxL*100).toFixed(1);
+    return `<div class="row"><span class="lab"><b>${shortKey(d.key)}</b>${d.baseline?' <span style="color:var(--faint);font-weight:400">◇chat</span>':''}</span>`+
+      `<span style="display:flex;flex-direction:column;gap:3px">`+
+      `<span class="barwrap"><span class="track" style="height:15px"><span class="fill" style="width:${wi}%;background:var(--isl)"></span></span><span class="val">${kfmt(d.isl)}</span></span>`+
+      `<span class="barwrap"><span class="track" style="height:15px"><span class="fill" style="width:${wo}%;background:var(--osl)"></span></span><span class="val">${kfmt(d.osl)}</span></span>`+
+      `</span></div>`;
+  }).join("");
+})();
+
+// context-scale table
+document.getElementById("t_scale").innerHTML = SCALE.map(s=>
+  `<tr><td>${s.b}</td><td class="num">${s.steps.toFixed(1)}</td><td class="num">${kfmt(s.ctx)}</td>`+
+  `<td class="num"><span class="pill" style="background:rgba(75,179,119,.15);color:var(--good)">${s.hit}%</span></td></tr>`).join("");
+
+// tail table
+document.getElementById("t_tail").innerHTML = DS.map(d=>
+  `<tr><td>${shortKey(d.key)}</td><td class="num">${kfmt(d.ctx50)}</td><td class="num">${kfmt(d.ctx99)}</td>`+
+  `<td class="num" style="color:var(--accent)">${gib(kvMiB(d.ctx99,KV_GLM))}</td>`+
+  `<td class="num" style="color:var(--dsv3)">${gib(kvMiB(d.ctx99,KV_DSV3))}</td></tr>`).join("");
+
+// master table
+document.getElementById("t_master").innerHTML = DS.map(d=>
+  `<tr><td><code>${shortKey(d.key)}</code></td><td style="text-align:left;color:var(--muted);font-size:12px">${d.arch}</td>`+
+  `<td class="num">${d.sess.toLocaleString()}</td><td class="num">${d.steps}</td>`+
+  `<td class="num" style="color:var(--isl)">${kfmt(d.isl)}</td><td class="num" style="color:var(--osl)">${d.osl}</td>`+
+  `<td class="num">${gib(kvMiB(d.ctx50,KV_GLM))}</td>`+
+  `<td class="num"><span class="pill" style="background:${hitColor(d.hit)}22;color:${hitColor(d.hit)}">${d.hit.toFixed(0)}%</span></td></tr>`).join("");
+</script>
