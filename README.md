@@ -40,7 +40,19 @@ agentic serving cost and latency. This repo turns that from hand-waving into num
 **nISL**: new input (must prefill) · **GQA**: grouped-query attention · **MLA**: multi-head latent attention
 (compressed KV cache, e.g. DeepSeek / GLM-5.2).
 
-## Quick start
+## Just want the dashboard?
+
+A pre-built, fully self-contained [`dashboard.html`](dashboard.html) is committed — **clone and open it, no setup**:
+
+```bash
+git clone https://github.com/MarloweAI/agent-trace-kv-analyzer
+open agent-trace-kv-analyzer/dashboard.html      # macOS  (Linux: xdg-open)
+```
+
+It inlines all data + styling (no external assets), so it works offline. Rebuild it anytime from the
+committed `*.stats.json` with `python build_dashboard.py` (stdlib only — no deps, no dataset download).
+
+## Quick start (full pipeline)
 
 ```bash
 make setup       # python venv + deps (tiktoken, duckdb, pyarrow, huggingface_hub)

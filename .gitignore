@@ -11,7 +11,6 @@ agentic_traces/**/ShareGPT_V3_unfiltered_cleaned_split.json
 agentic_traces/**/.cache/
 agentic_traces/**/download.log
 
-# Generated dashboard (rebuild with `python build_dashboard.py`)
-dashboard.html
-
-# The per-dataset reports (*.md) and *.stats.json ARE committed as example outputs.
+# dashboard.html IS committed (self-contained — open it directly after cloning).
+# Rebuild anytime with `python build_dashboard.py`.
+# The per-dataset reports (*.md) and *.stats.json are also committed as example outputs.
