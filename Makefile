@@ -17,8 +17,9 @@ download:                   ## fetch all datasets into agentic_traces/ (~7 GB)
 analyze:                    ## run the analysis engine over every dataset
 	@for k in $(KEYS); do $(PY) analysis_engine.py $$k; done
 
-dashboard:                  ## build dashboard.html from the *.stats.json files
+dashboard:                  ## build dashboard.html + headline SVG from the *.stats.json files
 	$(PY) build_dashboard.py
+	$(PY) build_headline_svg.py
 
 all: download analyze dashboard   ## full pipeline, end to end
 

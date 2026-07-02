@@ -1,5 +1,12 @@
 # agent-trace-kv-analyzer
 
+![Prefix-cache hit ratio across coding-agent traces](assets/prefix_cache_hit.svg)
+
+> *Headline finding (generated from the real traces in this repo):* **append-only ReAct/CodeAct agents reuse
+> 93–97% of their input as cached prefix**, so only ~3–7% of tokens (nISL) ever need real prefill. A
+> **state-machine** agent (Moatless) that rebuilds its prompt per phase collapses to **36%**, and a one-shot
+> **verifier** has nothing to reuse. Regenerate this chart with `python build_headline_svg.py`.
+
 Download public **coding-agent trace** datasets, profile their **request shape** (ISL/OSL, steps),
 model **prefix-cache reuse** and **KV-cache size**, and render a self-contained **dashboard** — end to end.
 

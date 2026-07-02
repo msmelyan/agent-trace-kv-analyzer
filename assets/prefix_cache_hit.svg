@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="450" viewBox="0 0 980 450" font-family="system-ui,Segoe UI,Roboto,sans-serif">
+<rect width="980" height="450" fill="#0f1417"/>
+<text x="40" y="42" fill="#5cc4bb" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15" letter-spacing="2" font-weight="700">PREFIX-CACHE HIT RATIO — THE HEADLINE</text>
+<line x1="40" y1="58" x2="940" y2="58" stroke="#26333a"/>
+<text x="40" y="86" fill="#95a7ac" font-size="14.5">1 − Σ nISL / Σ ISL: the share of input tokens already in cache (cISL), free to skip.</text>
+<text x="40" y="106" fill="#95a7ac" font-size="14.5">Append-only ReAct/CodeAct agents cluster at 93–97% — nearly all input is reused prefix.</text>
+<text x="40" y="126" fill="#95a7ac" font-size="14.5">Moatless (a state machine that rebuilds its prompt per phase) collapses to ~36%; the verifier is one call.</text>
+<text x="250" y="167.0" text-anchor="end" fill="#e8eef0" font-size="15">axt-lm-32b</text>
+<rect x="268" y="150" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="150" width="572.1" height="24" rx="5" fill="#4bb377"/>
+<text x="872" y="167.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">97.0%</text>
+<text x="250" y="207.0" text-anchor="end" fill="#e8eef0" font-size="15">nebius</text>
+<rect x="268" y="190" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="190" width="566.6" height="24" rx="5" fill="#4bb377"/>
+<text x="872" y="207.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">96.0%</text>
+<text x="250" y="247.0" text-anchor="end" fill="#e8eef0" font-size="15">openhands</text>
+<rect x="268" y="230" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="230" width="563.5" height="24" rx="5" fill="#4bb377"/>
+<text x="872" y="247.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">95.5%</text>
+<text x="250" y="287.0" text-anchor="end" fill="#e8eef0" font-size="15">r2egym-sft</text>
+<rect x="268" y="270" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="270" width="548.3" height="24" rx="5" fill="#4bb377"/>
+<text x="872" y="287.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">92.9%</text>
+<text x="250" y="327.0" text-anchor="end" fill="#e8eef0" font-size="15">moatless</text>
+<rect x="268" y="310" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="310" width="215.0" height="24" rx="5" fill="#d8664a"/>
+<text x="872" y="327.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">36.4%</text>
+<text x="250" y="367.0" text-anchor="end" fill="#e8eef0" font-size="15">r2egym-verifier</text>
+<rect x="268" y="350" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="350" width="3.0" height="24" rx="5" fill="#d8664a"/>
+<text x="872" y="367.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">0.0%</text>
+<text x="250" y="407.0" text-anchor="end" fill="#e8eef0" font-size="15">sharegpt-v3  ◇ chat</text>
+<rect x="268" y="390" width="590" height="24" rx="5" fill="#1b252a"/>
+<rect x="268" y="390" width="531.5" height="24" rx="5" fill="#4bb377"/>
+<text x="872" y="407.0" fill="#e8eef0" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14">90.1%</text>
+</svg>
