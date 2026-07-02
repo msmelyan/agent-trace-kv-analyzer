@@ -1,5 +1,7 @@
 # agent-trace-kv-analyzer
 
+**▶ Live dashboard:** https://claude.ai/code/artifact/563eea22-c17e-4734-8461-8778dd96e750 — open in a browser, no clone needed.
+
 ![Prefix-cache hit ratio across coding-agent traces](assets/prefix_cache_hit.svg)
 
 > *Headline finding (generated from the real traces in this repo):* **append-only ReAct/CodeAct agents reuse
@@ -51,6 +53,19 @@ open agent-trace-kv-analyzer/dashboard.html      # macOS  (Linux: xdg-open)
 
 It inlines all data + styling (no external assets), so it works offline. Rebuild it anytime from the
 committed `*.stats.json` with `python build_dashboard.py` (stdlib only — no deps, no dataset download).
+
+Prefer a link over a clone? The same page is published at a **stable URL** (top of this README).
+
+### Keeping the live dashboard in sync
+
+The live URL is a **published snapshot pinned to one stable address**. There is no automatic GitHub→artifact
+sync (GitHub can't push to a Claude artifact). To refresh it after changing the data:
+
+```bash
+make dashboard          # rebuild dashboard.html from *.stats.json
+```
+then, in a Claude Code session, ask Claude to **re-publish `dashboard.html` to the same artifact URL**
+(it redeploys in place — the link never changes). `make dashboard` prints this reminder.
 
 ## Quick start (full pipeline)
 

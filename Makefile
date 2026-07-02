@@ -17,9 +17,14 @@ download:                   ## fetch all datasets into agentic_traces/ (~7 GB)
 analyze:                    ## run the analysis engine over every dataset
 	@for k in $(KEYS); do $(PY) analysis_engine.py $$k; done
 
+ARTIFACT_URL := https://claude.ai/code/artifact/563eea22-c17e-4734-8461-8778dd96e750
+
 dashboard:                  ## build dashboard.html + headline SVG from the *.stats.json files
 	$(PY) build_dashboard.py
 	$(PY) build_headline_svg.py
+	@echo ""
+	@echo "→ To refresh the LIVE dashboard, ask Claude to re-publish dashboard.html to:"
+	@echo "  $(ARTIFACT_URL)  (redeploys in place — URL unchanged)"
 
 all: download analyze dashboard   ## full pipeline, end to end
 
