@@ -15,6 +15,31 @@ Answers, from real traces:
 - How big does the **KV cache** get, and how does that change with the serving model (GQA vs MLA)?
 - How do these differ across agent harnesses — and vs. a plain **ShareGPT chat** baseline?
 
+## Overview
+
+Coding agents (SWE-agent, OpenHands, Moatless, …) don't send one prompt — they run a **loop**: read an
+issue, explore the repo, edit files, run tests, repeat. Each turn re-sends a growing transcript, so the
+serving cost is dominated by two things this repo measures directly from real trajectories:
+
+1. **Request shape** — the per-call input length (**ISL**) and output length (**OSL**). Agentic serving is
+   *prefill-heavy / decode-light* (ISL ≫ OSL), the opposite of chat.
+2. **Prefix-cache reuse** — because each turn appends to the previous context, most of the input is an exact
+   prefix the server already has cached (**cISL**); only the new suffix (**nISL**) needs real prefill. How
+   much reuse you get depends entirely on the agent's architecture.
+3. **KV-cache footprint** — peak context × per-token KV cost, which depends on the *serving model's* attention
+   design (GQA vs MLA), not its parameter count.
+
+The pipeline downloads seven public datasets, tokenizes and profiles every session, models the cISL/nISL split
+and KV size per dataset, writes a Markdown report + machine-readable `stats.json` for each, and renders a single
+self-contained **dashboard** (plus the headline SVG above) — all reproducible from source.
+
+**Why it matters:** as inference gets faster, prefill/KV and the prefix-cache hit rate increasingly govern
+agentic serving cost and latency. This repo turns that from hand-waving into numbers measured on real traces.
+
+**Glossary** — **ISL/OSL**: input/output sequence length per LLM call · **cISL**: cached input (prefix hit) ·
+**nISL**: new input (must prefill) · **GQA**: grouped-query attention · **MLA**: multi-head latent attention
+(compressed KV cache, e.g. DeepSeek / GLM-5.2).
+
 ## Quick start
 
 ```bash
