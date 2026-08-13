@@ -23,6 +23,11 @@ Answers, from real traces:
 - How big does the **KV cache** get, and how does that change with the serving model (GQA vs MLA)?
 - How do these differ across agent harnesses — and vs. a plain **ShareGPT chat** baseline?
 
+Additional analysis: [`tool_call_time_analysis/`](tool_call_time_analysis/) compares
+tool-call latency and TraceLab's wall-vs-internal residual overhead with SWE-chat's
+observable tool turnaround, including full latency buckets, per-tool tables, caveats,
+references, and a reproducible aggregate-only script.
+
 ## Overview
 
 Coding agents (SWE-agent, OpenHands, Moatless, …) don't send one prompt — they run a **loop**: read an
