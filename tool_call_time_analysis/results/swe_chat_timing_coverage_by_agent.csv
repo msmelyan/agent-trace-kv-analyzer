@@ -1,0 +1,7 @@
+agent,tool_uses,timed_uses,paired,positive_pairs
+Claude Code,327969,327969,327201,326309
+OpenCode,22850,0,0,0
+unknown,3004,3004,2991,2991
+Agent,1408,1408,1402,1397
+Gemini CLI,710,223,211,211
+opencode,1,0,0,0
