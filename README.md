@@ -1,12 +1,15 @@
 # agent-trace-kv-analyzer
 
-## Dashboards
+## Analysis products
 
 - **[AgentX Trace Atlas](https://agentx-trace-atlas.msmelyan.chatgpt.site)** — public analysis of 393
   SemiAnalysis AgentX Claude Code sessions and 98,827 requests, including long-context traffic,
   WekaTrace prefix reuse, timing, and subagent concurrency.
 - **[Cross-dataset dashboard](https://claude.ai/code/artifact/563eea22-c17e-4734-8461-8778dd96e750)** —
   static snapshot comparing seven public agent/chat datasets. It does *not* auto-update; refresh steps below.
+- **[Tool-call timing analysis](tool_call_time_analysis/)** — public analysis of TraceLab v0.0.2 and
+  SWE-chat tool calls, including full latency distributions, Codex internal-vs-end-to-end residual
+  overhead, per-tool timing, provenance, limitations, and reproducible aggregate CSVs.
 
 ![Prefix-cache hit ratio across coding-agent traces](assets/prefix_cache_hit.svg)
 
@@ -22,11 +25,6 @@ Answers, from real traces:
 - How much of an agentic prompt is a **prefix-cache hit** (cISL) vs. new prefill (nISL)?
 - How big does the **KV cache** get, and how does that change with the serving model (GQA vs MLA)?
 - How do these differ across agent harnesses — and vs. a plain **ShareGPT chat** baseline?
-
-Additional analysis: [`tool_call_time_analysis/`](tool_call_time_analysis/) compares
-tool-call latency and TraceLab's wall-vs-internal residual overhead with SWE-chat's
-observable tool turnaround, including full latency buckets, per-tool tables, caveats,
-references, and a reproducible aggregate-only script.
 
 ## Overview
 
