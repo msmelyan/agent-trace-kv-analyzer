@@ -1,0 +1,10 @@
+{
+  "dataset_repo": "semianalysisai/cc-traces-weka-062126",
+  "dataset_revision": "23f152f6f0f9399a85901b89a6458def0ef16729",
+  "aiperf_repo": "https://github.com/ai-dynamo/aiperf",
+  "aiperf_revision": "c26fe88bd88d32740c83b4637c1e573e06df5ecc",
+  "input_file": "agentx_data/traces.jsonl",
+  "input_size_bytes": 1847151435,
+  "trace_count": 393,
+  "request_count": 98827
+}
