@@ -1,7 +1,12 @@
 # agent-trace-kv-analyzer
 
-**▶ Hosted dashboard (static snapshot):** https://claude.ai/code/artifact/563eea22-c17e-4734-8461-8778dd96e750
-— clickable in a browser, no clone needed. It's a point-in-time render (does *not* auto-update); refresh steps below.
+## Dashboards
+
+- **[AgentX Trace Atlas](https://agentx-trace-atlas.msmelyan.chatgpt.site)** — public analysis of 393
+  SemiAnalysis AgentX Claude Code sessions and 98,827 requests, including long-context traffic,
+  WekaTrace prefix reuse, timing, and subagent concurrency.
+- **[Cross-dataset dashboard](https://claude.ai/code/artifact/563eea22-c17e-4734-8461-8778dd96e750)** —
+  static snapshot comparing seven public agent/chat datasets. It does *not* auto-update; refresh steps below.
 
 ![Prefix-cache hit ratio across coding-agent traces](assets/prefix_cache_hit.svg)
 
@@ -42,6 +47,49 @@ agentic serving cost and latency. This repo turns that from hand-waving into num
 **Glossary** — **ISL/OSL**: input/output sequence length per LLM call · **cISL**: cached input (prefix hit) ·
 **nISL**: new input (must prefill) · **GQA**: grouped-query attention · **MLA**: multi-head latent attention
 (compressed KV cache, e.g. DeepSeek / GLM-5.2).
+
+## AgentX Claude Code trace analysis
+
+The AgentX analysis is a separate, implementation-grounded path for
+[`semianalysisai/cc-traces-weka-062126`](https://huggingface.co/datasets/semianalysisai/cc-traces-weka-062126).
+It inspects raw entries first and follows NVIDIA AIPerf's WekaTrace implementation for request-chain detection,
+timestamps, 64-token `hash_ids`, theoretical prefix reuse, and explicit SPAWN/JOIN subagent topology.
+
+Headline measurements from the pinned corpus revision:
+
+- **393 sessions / 98,827 requests**; median **86 requests** and **2.8 hours** per session.
+- Median request: **142K ISL / 444 OSL**; **53.3%** of requests exceed 128K context and **11.2%** exceed 512K.
+- **98.3% aggregate theoretical prefix reuse**, leaving 365.9M block-estimated new-prefill tokens.
+- Explicit subagents produce **42.5%** of requests; **44.5%** of sessions use at least one subagent.
+- Recorded per-session model-request concurrency reaches **23**, with up to **10** simultaneous subagent groups.
+
+The 98.3% result is theoretical reuse available from trace structure—not an observed runtime KV-cache hit
+rate. The corpus also cannot supply speculative-decoding acceptance rates; those require separate,
+model-specific calibration.
+
+### Reproduce AgentX outputs
+
+Download `traces.jsonl` at dataset revision
+`23f152f6f0f9399a85901b89a6458def0ef16729` into `agentx_data/`, then run:
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -r requirements-agentx.txt
+.venv/bin/python analyze_agentx.py
+```
+
+Important outputs:
+
+- [`AGENTX_SCHEMA_NOTES.md`](AGENTX_SCHEMA_NOTES.md) — raw schema and AIPerf-aligned field semantics.
+- [`AGENTX_TRACE_ANALYSIS.md`](AGENTX_TRACE_ANALYSIS.md) — complete findings and representative trace IDs.
+- [`agentx_outputs/summary.json`](agentx_outputs/summary.json) — machine-readable corpus summary.
+- `agentx_outputs/per_{request,trace}_metrics.csv` — reusable derived tables.
+- [`agentx_outputs/topology.json`](agentx_outputs/topology.json) — reconstructed request-stream and subagent topology.
+- [`agentx-site/`](agentx-site/) — source for the public AgentX Trace Atlas.
+
+The manifest records both immutable inputs: dataset revision
+`23f152f6f0f9399a85901b89a6458def0ef16729` and AIPerf revision
+`c26fe88bd88d32740c83b4637c1e573e06df5ecc`.
 
 ## Just want the dashboard?
 
